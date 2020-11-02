@@ -1,22 +1,22 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import { BrowserRouter, Route, Switch } from "react-router-dom";
+
+import index from "./components/index";
+import targetForm from "./components/targetForm";
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
         <Switch>
-          <Route path="/" />
-          <Route path="/room/:roomID" />
+          <Route exact path="/" component={index}/>
+          <Route exact path="/form" component={targetForm}/>
+          <Route path="/target/:name/:url/:path"/>
+          <Route exact path="/room/:roomID" />
         </Switch>
       </BrowserRouter>
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-
-      </header>
     </div>
   );
 }

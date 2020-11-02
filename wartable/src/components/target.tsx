@@ -1,35 +1,43 @@
-// @ts-ignore
 import React, { useEffect, useRef, useState } from 'react';
 const axios = require('axios').default;
 import ApexCharts from 'apexcharts';
+import { createLoopVariable } from 'typescript';
 
 const target = (url: string, xpath: string, name: string) => {
-    const chart = useRef();
-    const [loop, setLoop] = useState();
-    const [value, setValue] = useState();
-    const [graphData, setData] = useState([]);
+    const chart = useRef(new ApexCharts(null, null));
+    const loop = useRef<any>();
+    const graphData = useRef<any[]>([]);
     const [wait, setWait] = useState(3);
-    const graphLength = useRef(10);
+    const [graphLength, setGraphLength] = useState(10);
     
     useEffect(() => {
-        // loop
-        setLoop(setInterval(() => {
-            var t = findTarget(url, xpath)
-            var nl = graphData
+        // generate and render chart
+        var chartdiv = "#" + name;
+        chart.current = new ApexCharts(document.querySelector(chartdiv), OPTIONS); 
+        chart.current.render();
 
-            nl.append({
+        // loop
+        loop.current = setInterval(() => {
+            // find val
+            var tar = findTarget(url, xpath)
+            tar = Number(tar)
+            console.log(tar);
+            
+            // push val with timestamp
+            graphData.current.push({
                 x: getTimestamp(),
-                y: t,
+                y: tar,
             });
 
-            if (nl.length() > graphLength) {
-                nl.shift();
+            // shift if too long
+            if (graphData.current.length > graphLength) {
+                graphData.current.shift();
             }
-            
-            setData(nl);
-            chart.updateSeries(graphData);
+            // update chart 
+            chart.current.updateSeries(graphData.current)
            
-        }, wait * 1000))
+        }, wait * 1000)
+
     })
 
     // helper to request url
@@ -45,7 +53,7 @@ const target = (url: string, xpath: string, name: string) => {
     function findTarget(url: string, path: string) {
         var html = getHTML(url);
         const result = document.evaluate(path, document, null, XPathResult.STRING_TYPE, null)
-
+        // should be string
         if (result.resultType !== XPathResult.STRING_TYPE) {
             return -1
         } else {
@@ -53,11 +61,13 @@ const target = (url: string, xpath: string, name: string) => {
         }
     }
 
+    // timestamp helper
     function getTimestamp() {
         var ts = Math.round((new Date()).getTime() / 1000);
         return ts
     }
 
+    // CHART OPTIONS
     const OPTIONS = useRef({
         chart: {
             height: 350,
@@ -92,11 +102,6 @@ const target = (url: string, xpath: string, name: string) => {
             size: 1,
         }
     });
-
-    // generate and render chart
-    var chartdiv = "#" + name;
-    chart.current = new ApexCharts(document.querySelector(chartdiv), OPTIONS); 
-    chart.current.render();
 
     // render
     return (
